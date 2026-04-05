@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI Pipeline
 
 on:
   push:
@@ -11,33 +11,27 @@ on:
       - '*master*'
 
 jobs:
-  build:
+  cross_build:
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Install CMake
-        run: |
-          if [[ "$RUNNER_OS" == "Linux" ]]; then
-            sudo apt-get install cmake
-          elif [[ "$RUNNER_OS" == "Windows" ]]; then
-            choco install cmake --version 3.21.2
-          else
-            brew install cmake
-          fi
+        uses: jwlawson/actions-setup-cmake@v1
 
-      - name: Build
-        run: cmake . && cmake --build .
+      - name: Run CI script (Windows)
+        if: runner.os == 'Windows'
+        run: ci.bat
 
-      - name: Test
-        run: ctest
+      - name: Run CI script (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: bash ci.bat
 
-      - name: Deploy Results
-        run: |
-          echo 'Deploying build results...'
-          # Insert your deployment commands here.
+      - name: Deploy step
+        run: echo "Deploying..."
